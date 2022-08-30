@@ -2,7 +2,7 @@ kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: traefik-ingress-controller
-  namespace: a0008
+  namespace: traefik
   labels:
     app.kubernetes.io/name: traefik-ingress-ilb
     app.kubernetes.io/instance: traefik-ingress-ilb
@@ -11,7 +11,7 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: traefik-ingress-controller
-  namespace: a0008
+  namespace: traefik
   labels:
     app.kubernetes.io/name: traefik-ingress-ilb
     app.kubernetes.io/instance: traefik-ingress-ilb
@@ -64,7 +64,7 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: traefik-watch-workloads
-  namespace: a0008
+  namespace: traefik
   labels:
     app.kubernetes.io/name: traefik-ingress-ilb
     app.kubernetes.io/instance: traefik-ingress-ilb
@@ -75,13 +75,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: traefik-ingress-controller
-  namespace: a0008
+  namespace: traefik
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: traefik-ingress-config
-  namespace: a0008
+  namespace: traefik
   labels:
     app.kubernetes.io/name: traefik-ingress-ilb
     app.kubernetes.io/instance: traefik-ingress-ilb
@@ -101,10 +101,10 @@ data:
       # prevent Traefik from collecting and sending stats from production
       sendanonymoususage = false
     [log]
-      level = "ERROR"
+      level = "DEBUG"
       format = "json"
     [api]
-      dashboard = false
+      dashboard = true
     [providers]
       # Configuration reload frequency:
       #   * duration that Traefik waits for, after a configuration reload, before taking into account any new configuration refresh event
@@ -117,14 +117,14 @@ data:
       # and derives the corresponding dynamic configuration from it. https://kubernetes.io/docs/concepts/services-networking/ingress/
       [providers.kubernetesingress]
         ingressClass = "traefik-internal"
-        namespaces = ["a0008"]
+        namespaces = ["traefik"]
         [providers.kubernetesIngress.ingressEndpoint]
-          publishedService = "a0008/traefik-ingress-service"
+          publishedService = "traefik/traefik-ingress-service"
     # Enable gzip compression
     [http.middlewares]
       [http.middlewares.gzip-compress.compress]
       [http.middlewares.app-gateway-snet.ipWhiteList]
-        sourceRange = ["10.240.5.0/24"]
+        sourceRange = ["10.240.0.0/16"]
     [entryPoints]
       [entryPoints.metrics]
         address = ":8082"
@@ -133,7 +133,7 @@ data:
       [entryPoints.websecure]
         address = ":8443"
         [entryPoints.websecure.forwardedHeaders]
-          trustedIPs = ["10.240.5.0/24"]
+          trustedIPs = ["10.240.0.0/16"]
         [entryPoints.websecure.http.tls]
           options = "default"
     [ping]
@@ -160,7 +160,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: traefik-ingress-service
-  namespace: a0008
+  namespace: traefik
   labels:
     app.kubernetes.io/name: traefik-ingress-ilb
     app.kubernetes.io/instance: traefik-ingress-ilb
@@ -184,7 +184,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: traefik-ingress-controller
-  namespace: a0008
+  namespace: traefik
   labels:
     app.kubernetes.io/name: traefik-ingress-ilb
     app.kubernetes.io/instance: traefik-ingress-ilb
